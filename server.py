@@ -4,6 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import re
+import os
 
 app = Flask(__name__, static_folder='static')
 CORS(app)
@@ -193,14 +194,9 @@ def extract_content():
 
 if __name__ == '__main__':
     print("\n" + "="*60)
-    print("Native Ad Studio Server Started!")
+    print("🎯 Native Ad Studio Server Started!")
     print("="*60)
-    print("\nServer is running...\n")
-    
-    # לפיתוח מקומי
-    # app.run(debug=True, host='0.0.0.0', port=5000)
-    
-    # לייצור (production)
-    import os
+    print("\n📱 Open in browser: http://localhost:5000")
+    print("\n⚡ Server is running... Press Ctrl+C to stop\n")
     port = int(os.environ.get('PORT', 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)
+    app.run(debug=True, host='0.0.0.0', port=port)
