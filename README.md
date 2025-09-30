@@ -1,7 +1,16 @@
-git init
-git add .
-git commit -m "Initial commit - Native Ad Studio"
-git branch -M main
-git remote add origin https://github.com/AvixTz/native-ad-studio.git
-git push -u origin main
+\# Native Ad Studio - Local Server
+
+
+
+\## התקנה
+
+
+
+1\. וודא ש-Python מותקן (3.8+)
+
+2\. התקן תלויות:
+
+```bash
+
+pip install -r requirements.txt
 
