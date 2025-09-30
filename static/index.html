@@ -1172,13 +1172,19 @@
             background-position: center;
             background-repeat: no-repeat;
             transition: all 0.3s ease;
-            cursor: move;
+            cursor: default;
             position: relative;
             z-index: 103;
+            user-select: none;
         }
 
         .ad-image.has-image {
             color: transparent;
+            cursor: grab;
+        }
+
+        .ad-image.has-image:active {
+            cursor: grabbing;
         }
 
         .image-controls {
@@ -1226,11 +1232,12 @@
             color: var(--gray-900);
             line-height: 1.4;
             margin-bottom: 8px;
+            padding-bottom: 4px;
             word-wrap: break-word;
             overflow-wrap: break-word;
             hyphens: auto;
             white-space: normal;
-            overflow: hidden;
+            overflow: visible;
             text-overflow: ellipsis;
             display: -webkit-box;
             -webkit-line-clamp: 3;
@@ -1241,11 +1248,12 @@
             color: var(--gray-600);
             line-height: 1.4;
             margin-bottom: 12px;
+            padding-bottom: 4px;
             word-wrap: break-word;
             overflow-wrap: break-word;
             hyphens: auto;
             white-space: normal;
-            overflow: hidden;
+            overflow: visible;
             text-overflow: ellipsis;
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -1762,18 +1770,18 @@
                 <div class="division-control">
                     <div class="division-options">
                         <div class="division-btn" data-split="30/70">30/70</div>
-                        <div class="division-btn active" data-split="40/60">40/60</div>
+                        <div class="division-btn" data-split="40/60">40/60</div>
                         <div class="division-btn" data-split="50/50">50/50</div>
                         <div class="division-btn" data-split="60/40">60/40</div>
-                        <div class="division-btn" data-split="70/30">70/30</div>
+                        <div class="division-btn active" data-split="70/30">70/30</div>
                         <div class="division-btn" data-split="80/20">80/20</div>
                     </div>
                     <div class="range-control">
                         <div class="range-header">
                             <span class="range-label">Image %</span>
-                            <span class="range-value" id="imageSplitValue">40%</span>
+                            <span class="range-value" id="imageSplitValue">70%</span>
                         </div>
-                        <input type="range" class="range-slider" id="imageSplit" min="20" max="80" value="40">
+                        <input type="range" class="range-slider" id="imageSplit" min="20" max="80" value="70">
                     </div>
                 </div>
             </div>
@@ -1961,7 +1969,7 @@
                         <span class="range-label">Line Height</span>
                         <span class="range-value" id="lineHeightValue">1.0</span>
                     </div>
-                    <input type="range" class="range-slider" id="lineHeight" min="0.8" max="2" step="0.1" value="1.0">
+                    <input type="range" class="range-slider" id="lineHeight" min="0.8" max="2" step="0.1" value="1.4">
                 </div>
             </div>
         </div>
@@ -3113,10 +3121,27 @@
                 elements.sponsoredTextColor.value = originalColors.sponsored;
                 elements.actionButtonColor.value = originalColors.actionButton;
                 elements.actionButtonBg.value = originalColors.actionButtonBg;
-                
+
                 // Reset button style to transparent
                 setButtonStyle('transparent');
-                
+
+                // Reset text-shadow and font-weight from overlay mode
+                preview.adPrimaryTitle.style.removeProperty('text-shadow');
+                preview.adPrimaryTitle.style.removeProperty('font-weight');
+                preview.adSecondaryTitle.style.removeProperty('text-shadow');
+                preview.adSecondaryTitle.style.removeProperty('font-weight');
+                preview.adBrandName.style.removeProperty('text-shadow');
+                preview.adBlogName.style.removeProperty('text-shadow');
+                preview.sponsoredTag.style.removeProperty('text-shadow');
+                preview.sponsoredTag.style.removeProperty('font-weight');
+                preview.sponsoredTag.style.removeProperty('background-color');
+                preview.sponsoredTag.style.removeProperty('border-color');
+                preview.sponsoredTag.style.removeProperty('backdrop-filter');
+                preview.actionButton.style.removeProperty('text-shadow');
+                preview.actionButton.style.removeProperty('background-color');
+                preview.actionButton.style.removeProperty('border');
+                preview.actionButton.style.removeProperty('backdrop-filter');
+
                 wasInOverlayMode = false;
                 showNotification('🎨 Colors reset from overlay mode');
             }
@@ -3134,7 +3159,7 @@
             preview.nativeAd.className = `native-ad`;
             
             const divisionSection = document.getElementById('divisionSection');
-            const showDivision = ['left-image', 'right-image', 'top-image'].includes(template);
+            const showDivision = ['left-image', 'right-image', 'top-image', 'overlay'].includes(template);
             divisionSection.classList.toggle('hidden', !showDivision);
             
             const imageContainer = preview.nativeAd.querySelector('.ad-image-container');
@@ -3404,17 +3429,57 @@
 
         function adjustImagePosition(deltaX, deltaY) {
             if (isEmailMode) return; // Don't adjust image position in email mode
-            
+
             const currentX = parseInt(elements.imagePositionX.value);
             const currentY = parseInt(elements.imagePositionY.value);
-            
+
             elements.imagePositionX.value = currentX + deltaX;
             elements.imagePositionY.value = currentY + deltaY;
-            
+
             document.getElementById('imagePositionXValue').textContent = elements.imagePositionX.value + 'px';
             document.getElementById('imagePositionYValue').textContent = elements.imagePositionY.value + 'px';
-            
+
             updatePreview();
+        }
+
+        // Initialize drag-to-move functionality for image
+        function initImageDrag() {
+            let isDragging = false;
+            let startX, startY;
+            let initialPosX, initialPosY;
+
+            preview.adImage.addEventListener('mousedown', function(e) {
+                if (isEmailMode || !preview.adImage.classList.contains('has-image')) return;
+
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                initialPosX = parseInt(elements.imagePositionX.value) || 0;
+                initialPosY = parseInt(elements.imagePositionY.value) || 0;
+
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+
+                elements.imagePositionX.value = initialPosX + deltaX;
+                elements.imagePositionY.value = initialPosY + deltaY;
+
+                document.getElementById('imagePositionXValue').textContent = elements.imagePositionX.value + 'px';
+                document.getElementById('imagePositionYValue').textContent = elements.imagePositionY.value + 'px';
+
+                updatePreview();
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isDragging) {
+                    isDragging = false;
+                }
+            });
         }
 
         function extractContent() {
@@ -3488,7 +3553,7 @@ async function realContentExtraction(url) {
         showNotification('🌐 Extracting content...');
         
         // Call local Python server
-        const response = await fetch('/api/extract', {
+        const response = await fetch('http://localhost:5000/api/extract', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -3883,7 +3948,7 @@ async function realContentExtraction(url) {
             elements.imageScale.value = '100';
             elements.imagePositionX.value = '0';
             elements.imagePositionY.value = '0';
-            elements.imageSplit.value = '40';
+            elements.imageSplit.value = '70';
             
             updateLayoutSplit();
             preview.adImage.style.backgroundSize = 'cover';
@@ -4097,12 +4162,12 @@ async function realContentExtraction(url) {
             try {
                 if (typeof html2canvas !== 'undefined') {
                     showNotification('📸 Creating high-quality screenshot...');
-                    
+
                     let targetElement = isEmailMode ? preview.emailContainer : preview.nativeAd;
                     if (currentFrame !== 'none') {
                         targetElement = preview.previewWrapper;
                     }
-                    
+
                     const canvas = await html2canvas(targetElement, {
                         backgroundColor: currentFrame === 'none' ? '#ffffff' : 'transparent',
                         scale: 2,
@@ -4113,13 +4178,13 @@ async function realContentExtraction(url) {
                         removeContainer: true,
                         foreignObjectRendering: true
                     });
-                    
+
                     canvas.toBlob(async (blob) => {
                         try {
                             await navigator.clipboard.write([
                                 new ClipboardItem({ 'image/png': blob })
                             ]);
-                            
+
                             if (isEmailMode) {
                                 showNotification(`✅ Email marketing design copied!`);
                             } else {
@@ -4134,7 +4199,7 @@ async function realContentExtraction(url) {
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement('a');
                             a.href = url;
-                            
+
                             if (isEmailMode) {
                                 a.download = `email-marketing-${Date.now()}.png`;
                             } else {
@@ -4143,7 +4208,7 @@ async function realContentExtraction(url) {
                                 const height = ratio.height * resolutionMultiplier;
                                 a.download = `native-ad-${width}x${height}-${currentFrame}.png`;
                             }
-                            
+
                             document.body.appendChild(a);
                             a.click();
                             document.body.removeChild(a);
@@ -4208,10 +4273,10 @@ async function realContentExtraction(url) {
             elements.imagePositionX.value = '0';
             elements.imagePositionY.value = '0';
             elements.contentPadding.value = '10';
-            elements.lineHeight.value = '1.0';
+            elements.lineHeight.value = '1.4';
             elements.primaryTitleSize.value = '14';
             elements.secondaryTitleSize.value = '11';
-            elements.imageSplit.value = '40';
+            elements.imageSplit.value = '70';
             elements.globalFontSize.value = '1';
             elements.frameWidth.value = '30';
             
@@ -4263,7 +4328,7 @@ async function realContentExtraction(url) {
             selectedImageIndex = 0;
 
             document.querySelectorAll('.division-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector('[data-split="40/60"]')?.classList.add('active');
+            document.querySelector('[data-split="70/30"]')?.classList.add('active');
             document.querySelector('[data-resolution="1"]')?.classList.add('active');
             document.querySelector('[data-frame="none"]').classList.add('active');
             document.getElementById('frameWidthControl').style.display = 'none';
@@ -4352,12 +4417,15 @@ async function realContentExtraction(url) {
             updateAllRangeDisplays();
             updatePreviewFrame();
             updateDimensionsFromAspectRatio();
-            
+
             // Set default transparent button style
             setButtonStyle('transparent');
-            
+
+            // Initialize drag-to-move for image
+            initImageDrag();
+
             updatePreview();
-            
+
             console.log('Initialization completed');
         });
 
@@ -4381,6 +4449,7 @@ async function realContentExtraction(url) {
 
     <!-- HTML2Canvas for screenshot functionality -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <!-- dom-to-image as alternative for better background-image support -->
+    <script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js"></script>
 </body>
-
 </html>
