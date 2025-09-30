@@ -3488,7 +3488,7 @@ async function realContentExtraction(url) {
         showNotification('🌐 Extracting content...');
         
         // Call local Python server
-        const response = await fetch('http://localhost:5000/api/extract', {
+        const response = await fetch('/api/extract', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -4382,4 +4382,5 @@ async function realContentExtraction(url) {
     <!-- HTML2Canvas for screenshot functionality -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </body>
+
 </html>
