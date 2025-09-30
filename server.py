@@ -193,9 +193,14 @@ def extract_content():
 
 if __name__ == '__main__':
     print("\n" + "="*60)
-    print("🎯 Native Ad Studio Server Started!")
+    print("Native Ad Studio Server Started!")
     print("="*60)
-    print("\n📱 Open in browser: http://localhost:5000")
-    print("\n⚡ Server is running... Press Ctrl+C to stop\n")
-
+    print("\nServer is running...\n")
+    
+    # לפיתוח מקומי
+    # app.run(debug=True, host='0.0.0.0', port=5000)
+    
+    # לייצור (production)
+    import os
+    port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
