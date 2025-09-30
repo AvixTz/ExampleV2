@@ -33,7 +33,7 @@ def extract_content():
         response.raise_for_status()
         
         # Parse HTML
-        soup = BeautifulSoup(response.content, 'lxml')
+        soup = BeautifulSoup(response.content, 'html5lib')
         
         # Extract title
         title = ''
